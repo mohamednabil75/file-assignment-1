@@ -1,4 +1,5 @@
 #include<cstring>
+using namespace std;
 class doctor{
     char id[15];
     char name[30];
