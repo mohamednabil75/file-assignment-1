@@ -1,15 +1,24 @@
 #include<cstring>
+#include<fstream>
 using namespace std;
 class doctor{
+public:
     char id[15];
     char name[30];
     char address[30];
-  public:
-    void add(char id[15],char name[30],char address[30]){
-        strcpy(this->id,id);
-        strcpy(this->name,name);
-        strcpy(this->address,address);
-        //continue to add data into file
+    const static int size = 1000;
+
+    void addDoctor(fstream &file , doctor &d){
+        char record[size];
+        strcpy(record,d.id);
+        strcat(record,"|");
+        strcat(record,d.name);
+        strcat(record,"|");
+        strcat(record,d.address);
+        strcat(record,"\n");
+        short length = strlen(record);
+        file << length;
+        file.write(record,length);
     }
     void del(){};
     void update(){};
