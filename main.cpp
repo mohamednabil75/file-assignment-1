@@ -14,47 +14,106 @@ int main(){
        << "7) Print doctor info\n"
        << "8) Print appointment info\n"
        << "9) Write query\n"
+       <<"10) Search for specific doctor\n"
+       <<"11) Search for specific appointment\n"
        << "0) Exit\n";
 
     cin>>choice;
     cin.ignore();
     switch (choice)
     {
-        case 1: {
-            fstream file("doctor.txt",ios::out | ios::app);
+        case(1): {
+            fstream file("doctor.txt", ios::out | ios::app);
             if (!file) {
                 cout << "Error opening file!\n";
                 return 1;
             }
             doctor doc;
-            cout <<"Enter doctor data: " << endl;
-            cout<<"id:";
-            cin.getline(doc.id,15);
-            cout<<"Name:";
-            cin.getline(doc.name,30);
-            cout<<"address:";
-            cin.getline(doc.address,30);
-            doc.addDoctor(file , doc);
+            bool validID = false;
+            while (!validID) {
+                cout << "Enter doctor ID: ";
+                cin.getline(doc.id, 15);
+
+                vector<doctor::PIndex> tempIndex;
+                doc.readPrimIndex(tempIndex);
+
+                bool exists = false;
+                for (auto &p: tempIndex)
+                    if (strcmp(p.id, doc.id) == 0) exists = true;
+
+                if (exists)
+                    cout << "ID already exists. Enter a different ID.\n";
+                else
+                    validID = true;
+            }
+
+
+            cout << "Name: ";
+            cin.getline(doc.name, 30);
+            cout << "Address: ";
+            cin.getline(doc.address, 30);
+
+            doc.addDoctorPI(file, doc);
             file.close();
             break;
         }
-        case 2: {
-            fstream file2("appointment.txt",ios::out|ios::app);
-            appointment appoint;
-            if (!file2) {
+
+
+        case 2: { // Add appointment
+            fstream file("appointment.txt", ios::out | ios::app | ios::binary);
+            if (!file) {
                 cout << "Error opening file!\n";
                 return 1;
             }
-            cout<<"id:";
-            cin.getline(appoint.id,15);
-            cout<<"date:";
-            cin.getline(appoint.date,30);
-            cout<<"doctor id:";
-            cin.getline(appoint.docId,15);
-            appoint.addAppointment(file2 , appoint);
-            file2.close();
+
+            appointment appoint;
+            bool validID = false;
+
+            // Ensure unique appointment ID
+            while (!validID) {
+                cout << "Enter appointment ID: ";
+                cin.getline(appoint.id, 15);
+
+                vector<appointment::PIndex> tempIndex;
+                appoint.readPrimIndex(tempIndex); // Read existing PrimaryAppointment.txt
+
+                bool exists = false;
+                for (auto &p : tempIndex)
+                    if (strcmp(p.id, appoint.id) == 0) exists = true;
+
+                if (exists)
+                    cout << "ID already exists. Enter a different ID.\n";
+                else
+                    validID = true;
+            }
+
+            cout << "Date: ";
+            cin.getline(appoint.date, 30);
+
+            cout << "Doctor ID: ";
+            cin.getline(appoint.docId, 15);
+
+            appoint.addAppointmentPI(file, appoint); // Add to file and update primary index
+            file.close();
             break;
         }
+
+
+        case 10: {
+            doctor d;
+            d.searchDoctorById();
+            break;
+
+        }
+        case 11: {
+           appointment a;
+            a.searchAppointmentById();
+            break;
+
+        }
+
+
+
         default:
             break;
     }
