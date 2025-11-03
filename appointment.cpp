@@ -57,7 +57,7 @@ public:
             else
                 return primIndexArray[mid].RRN;
         }
-        return -1; // Not found
+        return -1;
     }
 
     // Add appointment record + update primary index
@@ -121,7 +121,7 @@ public:
             return;
         }
 
-        file.seekg(RRN, ios::beg); // move to record
+        file.seekg(RRN, ios::beg);
         short length;
         file.read((char*)&length, sizeof(short));
 

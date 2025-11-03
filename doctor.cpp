@@ -16,7 +16,7 @@ public:
             return strcmp(id, p.id) < 0;
         }
     };
-
+    // Write primary index to file
     void writePrimIndex(vector<PIndex> &primIndexArray) {
         ofstream outFile("Primary.txt");
         for (auto &p : primIndexArray) {
@@ -24,7 +24,7 @@ public:
         }
         outFile.close();
     }
-
+// Read primary index from file
     void readPrimIndex(vector<PIndex> &primIndexArray) {
         ifstream inFile("Primary.txt");
         if (!inFile) return;
@@ -41,6 +41,7 @@ public:
         }
         inFile.close();
     }
+    // Binary search in primary index
     int getRecordRRN(vector<PIndex> &primIndexArray, const char *id) {
         int low = 0, high = primIndexArray.size() - 1;
         while (low <= high) {
@@ -57,7 +58,7 @@ public:
     }
 
 
-
+// Add appointment record + update primary index
     void addDoctorPI(fstream &file, doctor &d) {
         file.seekp(0, ios::end);
         int RRN = file.tellp();
@@ -72,6 +73,7 @@ public:
         short length = strlen(record);
         file.write((char*)&length, sizeof(short));
         file.write(record, length);
+        // Update Primary Index
         vector<PIndex> primIndexArray;
         readPrimIndex(primIndexArray);
 
@@ -93,7 +95,7 @@ public:
     }
 
 
-
+// Search doctor by ID
     void searchDoctorById() {
         fstream primIndex("Primary.txt", ios::in | ios::binary);
         ifstream file("doctor.txt");
@@ -143,6 +145,7 @@ public:
     }
 
 
+    // Add doctor record without primary index (just for initial data)
     void addDoctor(fstream &file, doctor &d) {
         char record[size];
         strcpy(record, d.id);

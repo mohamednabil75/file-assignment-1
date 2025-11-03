@@ -47,7 +47,6 @@ int main(){
                     validID = true;
             }
 
-
             cout << "Name: ";
             cin.getline(doc.name, 30);
             cout << "Address: ";
@@ -58,8 +57,7 @@ int main(){
             break;
         }
 
-
-        case 2: { // Add appointment
+        case 2: {
             fstream file("appointment.txt", ios::out | ios::app | ios::binary);
             if (!file) {
                 cout << "Error opening file!\n";
@@ -69,13 +67,12 @@ int main(){
             appointment appoint;
             bool validID = false;
 
-            // Ensure unique appointment ID
             while (!validID) {
                 cout << "Enter appointment ID: ";
                 cin.getline(appoint.id, 15);
 
                 vector<appointment::PIndex> tempIndex;
-                appoint.readPrimIndex(tempIndex); // Read existing PrimaryAppointment.txt
+                appoint.readPrimIndex(tempIndex);
 
                 bool exists = false;
                 for (auto &p : tempIndex)
@@ -93,12 +90,10 @@ int main(){
             cout << "Doctor ID: ";
             cin.getline(appoint.docId, 15);
 
-            appoint.addAppointmentPI(file, appoint); // Add to file and update primary index
+            appoint.addAppointmentPI(file, appoint);
             file.close();
             break;
         }
-
-
         case 10: {
             doctor d;
             d.searchDoctorById();
@@ -111,9 +106,6 @@ int main(){
             break;
 
         }
-
-
-
         default:
             break;
     }
