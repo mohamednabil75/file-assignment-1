@@ -9,7 +9,9 @@ class RAW{
             char id[15];
 
             bool operator<(const PIndex &p) const {
-                return strcmp(id, p.id) < 0;
+                int p1=stoi(id);
+                int p2=stoi(p.id);
+                return p2> p1;
             }
         };
     /**

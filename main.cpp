@@ -5,7 +5,8 @@
 using namespace std;
 int main(){
     int choice;
-    
+    char id[15]="500";
+    cout<<stoi(id)<<endl;
     while(true){
         cout << "1) Add new doctor\n"
            << "2) Add new appointment\n"
