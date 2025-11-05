@@ -1,64 +1,22 @@
 #include <bits/stdc++.h>
 using namespace std;
+#include "ReadandWrite.h"
+#include "search.h"
+ // u can find class RAW in " ReadandWrite.h" file
 
-class doctor {
+class doctor:public virtual RAW,public  searchdoc {
 public:
     char id[15];
     char name[30];
     char address[30];
     const static int size = 1000;
-
-    struct PIndex {
-        int RRN;
-        char id[15];
-
-        bool operator<(const PIndex &p) const {
-            return strcmp(id, p.id) < 0;
-        }
-    };
-    // Write primary index to file
-    void writePrimIndex(vector<PIndex> &primIndexArray) {
-        ofstream outFile("Primary.txt");
-        for (auto &p : primIndexArray) {
-            outFile << p.id << "|" << p.RRN << "\n";
-        }
-        outFile.close();
-    }
-// Read primary index from file
-    void readPrimIndex(vector<PIndex> &primIndexArray) {
-        ifstream inFile("Primary.txt");
-        if (!inFile) return;
-        string line;
-        while (getline(inFile, line)) {
-            PIndex p;
-            stringstream ss(line);
-            string idStr, rrnStr;
-            getline(ss, idStr, '|');
-            getline(ss, rrnStr, '|');
-            strcpy(p.id, idStr.c_str());
-            p.RRN = stoi(rrnStr);
-            primIndexArray.push_back(p);
-        }
-        inFile.close();
-    }
-    // Binary search in primary index
-    int getRecordRRN(vector<PIndex> &primIndexArray, const char *id) {
-        int low = 0, high = primIndexArray.size() - 1;
-        while (low <= high) {
-            int mid = (low + high) / 2;
-            int cmp = strcmp(id, primIndexArray[mid].id);
-            if (cmp < 0)
-                high = mid - 1;
-            else if (cmp > 0)
-                low = mid + 1;
-            else
-                return primIndexArray[mid].RRN;
-        }
-        return -1;
-    }
-
-
-// Add appointment record + update primary index
+    
+    /**
+    *@param file the file u want to store data in
+    *@param d take data of doctor u want to add in primary index
+    *add doctor data in file ("primary.txt")
+    */
+    // Add appointment record + update primary index
     void addDoctorPI(fstream &file, doctor &d) {
         file.seekp(0, ios::end);
         int RRN = file.tellp();
@@ -75,7 +33,7 @@ public:
         file.write(record, length);
         // Update Primary Index
         vector<PIndex> primIndexArray;
-        readPrimIndex(primIndexArray);
+        readPrimIndex(primIndexArray,"Primary.txt");
 
         for (auto &p : primIndexArray) {
             if (strcmp(p.id, d.id) == 0) {
@@ -89,63 +47,22 @@ public:
         newEntry.RRN = RRN;
         primIndexArray.push_back(newEntry);
         sort(primIndexArray.begin(), primIndexArray.end());
-        writePrimIndex(primIndexArray);
+        writePrimIndex(primIndexArray,"Primary.txt");
 
         cout << "Doctor added and Primary Index updated.\n";
     }
 
 
 // Search doctor by ID
-    void searchDoctorById() {
-        fstream primIndex("Primary.txt", ios::in | ios::binary);
-        ifstream file("doctor.txt");
 
-        if (!file || !primIndex) {
-            cout << "Error: could not open files.\n";
-            return;
-        }
-
-        vector<PIndex> PrimIndexArray;
-        readPrimIndex(PrimIndexArray);
-
-        char ID[15];
-        cout << "Enter Target Doctor ID: ";
-        cin >> ID;
-
-        int RRN = getRecordRRN(PrimIndexArray, ID);
-        if (RRN == -1) {
-            cout << "Doctor not found!\n";
-            return;
-        }
-
-        file.seekg(RRN, ios::beg);
-        short length;
-        file.read((char*)&length, sizeof(short));
-
-        char *buffer = new char[length + 1];
-        file.read(buffer, length);
-        buffer[length] = '\0';
-
-        stringstream ss(buffer);
-        string id, name, address;
-        getline(ss, id, '|');
-        getline(ss, name, '|');
-        getline(ss, address, '|');
-
-        cout << "Doctor found:\n";
-        cout << "ID: " << id << "\n";
-        cout << "Name: " << name << "\n";
-        cout << "Address: " << address << "\n";
-
-        delete[] buffer;
-
-
-        file.close();
-        primIndex.close();
-    }
 
 
     // Add doctor record without primary index (just for initial data)
+    /** 
+    *@param file file that store data of doctors
+    *@param d doctor that u want to add to file 
+    *store data of doctor to file (doctor.txt)
+    */
     void addDoctor(fstream &file, doctor &d) {
         char record[size];
         strcpy(record, d.id);
