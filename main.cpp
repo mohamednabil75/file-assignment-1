@@ -91,7 +91,9 @@ int main(){
 
                 cout << "Doctor ID: ";
                 cin.getline(appoint.docId, 15);
-
+                doctor d;
+                int docfound=d.searchDoctorById(appoint.docId,0);
+                if(docfound==-1)continue;
                 appoint.addAppointmentPI(file, appoint);
                 file.close();
                 break;
@@ -101,7 +103,7 @@ int main(){
                 char ID[15];
                 cout << "Enter Target Doctor ID: ";
                 cin >> ID;
-                d.searchDoctorById(ID);
+                d.searchDoctorById(ID,1);
                 break;
 
             }

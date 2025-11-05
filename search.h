@@ -28,13 +28,17 @@ class searchdoc:public virtual search{
     public:
     
     // Binary search in primary index
-    void searchDoctorById(char ID[15]) {
+    /**
+     * @param ID for id u want to serch for
+     * @param SearchAndOutput if true it output data of doctor if false it returns only RRN of doctor without output it
+     */
+    int searchDoctorById(char ID[15],bool SearchAndOutput) {
         fstream primIndex("Primary.txt", ios::in | ios::binary);
         ifstream file("doctor.txt");
 
         if (!file || !primIndex) {
             cout << "Error: could not open files.\n";
-            return;
+            return -1;
         }
 
         vector<PIndex> PrimIndexArray;
@@ -42,7 +46,10 @@ class searchdoc:public virtual search{
         int RRN = getRecordRRN(PrimIndexArray, ID);
         if (RRN == -1) {
             cout << "Doctor not found!\n";
-            return;
+            return -1;
+        }
+        else if (SearchAndOutput==0){
+            return RRN;
         }
 
         file.seekg(RRN, ios::beg);

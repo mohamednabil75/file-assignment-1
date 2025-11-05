@@ -19,7 +19,7 @@ class RAW{
     // Write primary index to file
     // Read primary index from file
     void writePrimIndex(vector<PIndex> &primIndexArray,string filename) {
-        ofstream outFile("Primary.txt");
+        ofstream outFile(filename);
         for (auto &p : primIndexArray) {
             outFile << p.id << "|" << p.RRN << "\n";
         }
