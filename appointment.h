@@ -1,3 +1,5 @@
+#ifndef appointment_h
+#define appointment_h
 #include <bits/stdc++.h>
 using namespace std;
 #include "ReadandWrite.h"
@@ -66,3 +68,4 @@ public:
         file.write(record, length);
     }
 };
+#endif

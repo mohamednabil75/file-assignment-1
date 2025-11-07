@@ -1,3 +1,5 @@
+#ifndef doctor_h
+#define doctor_h
 #include <bits/stdc++.h>
 using namespace std;
 #include "ReadandWrite.h"
@@ -79,3 +81,4 @@ public:
 };
 
 
+#endif

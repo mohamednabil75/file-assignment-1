@@ -1,12 +1,16 @@
 #include <iostream>
-#include "doctor.cpp"
-#include "appointment.cpp"
+#include "doctor.h"
+#include "appointment.h"
+#include "query.h"
 #include<fstream>
 using namespace std;
 int main(){
+    query q;
+    cout<<endl;
+    q.parse("select id,name,docid from doctor,appointment");
+    // vector<string> name{"id","name","addres"};
+    // cout<<q.checkCoulmn("doctor",name)<<endl;
     int choice;
-    char id[15]="500";
-    cout<<stoi(id)<<endl;
     while(true){
         cout << "1) Add new doctor\n"
            << "2) Add new appointment\n"
