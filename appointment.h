@@ -98,5 +98,84 @@ public:
             }
         }
     }
+    void updateAppointmentDate(const char* appointmentID) {
+
+        vector<PIndex> primIndexArray;
+        readPrimIndex(primIndexArray, "PrimaryAppointment.txt");
+
+        int RRN = getRecordRRN(primIndexArray, appointmentID);
+        if (RRN == -1) {
+            cout << "Appointment with ID '" << appointmentID << "' not found!\n";
+            return;
+        }
+
+        fstream file("appointment.txt", ios::in | ios::out | ios::binary);
+        if (!file) {
+            cout << "Error opening appointment file for update!\n";
+            return;
+        }
+
+        file.seekg(RRN, ios::beg);
+        short length;
+        file.read((char*)&length, sizeof(short));
+
+        char *buffer = new char[length + 1];
+        file.read(buffer, length);
+        buffer[length] = '\0';
+
+
+        stringstream ss(buffer);
+        string currentId, currentDate, currentDocId;
+        getline(ss, currentId, '|');
+        getline(ss, currentDate, '|');
+        getline(ss, currentDocId, '|');
+
+        cout << "Current Appointment Information:\n";
+        cout << "ID: " << currentId << "\n";
+        cout << "Date: " << currentDate << "\n";
+        cout << "Doctor ID: " << currentDocId << "\n\n";
+
+
+        char newDate[30];
+        cout << "Enter new date (max 29 characters): ";
+        cin.getline(newDate, 30);
+
+
+        if (strlen(newDate) == 0) {
+            cout << "Date cannot be empty!\n";
+            delete[] buffer;
+            file.close();
+            return;
+        }
+
+        char updatedRecord[size];
+        strcpy(updatedRecord, appointmentID);
+        strcat(updatedRecord, "|");
+        strcat(updatedRecord, newDate);
+        strcat(updatedRecord, "|");
+        strcat(updatedRecord, currentDocId.c_str());
+        strcat(updatedRecord, "\n");
+
+        short newLength = strlen(updatedRecord);
+
+
+        if (newLength <= length) {
+            file.seekp(RRN + sizeof(short), ios::beg);
+            file.write(updatedRecord, newLength);
+
+            if (newLength < length) {
+                for (int i = newLength; i < length; i++) {
+                    file.put(' ');
+                }
+            }
+            cout << "Appointment date updated successfully!\n";
+        } else {
+            cout << "Error: New date is too long for the allocated space!\n";
+            cout << "Available space: " << length << " characters, Required: " << newLength << " characters\n";
+        }
+
+        delete[] buffer;
+        file.close();
+    }
 };
 #endif

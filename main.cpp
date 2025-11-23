@@ -6,9 +6,9 @@
 using namespace std;
 int main()
 {
-    query q;
-    cout << endl;
-    q.parse("select id,name,docid from doctor,appointment");
+    //query q;
+   // cout << endl;
+   // q.parse("select id,name,docid from doctor,appointment");
     // vector<string> name{"id","name","addres"};
     // cout<<q.checkCoulmn("doctor",name)<<endl;
     int choice;
@@ -17,14 +17,15 @@ int main()
         cout << "1) Add new doctor\n"
              << "2) Add new appointment\n"
              << "3) Update doctor name\n"
-             << "4) Update appointment date\n"
-             << "5) Delete appointment\n"
-             << "6) Delete doctor\n"
-             << "7) Print doctor info\n"
-             << "8) Print appointment info\n"
-             << "9) Write query\n"
-             << "10) Search for specific doctor\n"
-             << "11) Search for specific appointment\n"
+             << "4) Update doctor address\n"
+             << "5) Update appointment date\n"
+             << "6) Delete appointment\n"
+             << "7) Delete doctor\n"
+             << "8) Print doctor info\n"
+             << "9) Print appointment info\n"
+             << "10) Write query\n"
+             << "11) Search for specific doctor\n"
+             << "12) Search for specific appointment\n"
              << "0) Exit\n";
         cin >> choice;
         cin.ignore();
@@ -108,14 +109,46 @@ int main()
             cout << "Doctor ID: ";
             cin.getline(appoint.docId, 15);
             doctor d;
-/*             int docfound = d.searchDoctorById(appoint.docId, 0);
-            if (docfound == -1)
-                continue;
+           // int docfound = d.searchDoctorById(appoint.docId, 0);
+            //if (docfound == -1)
+               // continue;
             appoint.addAppointmentPI(file, appoint);
-            file.close(); */
+            file.close();
             break;
         }
-        case 5:
+            case 3: // Update doctor name
+            {
+                char doctorID[15];
+                cout << "Enter Doctor ID to update name: ";
+                cin.getline(doctorID, 15);
+
+                doctor doc;
+                doc.updateDoctorName(doctorID);
+                break;
+            }
+            case 4: // Update doctor address
+            {
+                char doctorID[15];
+                cout << "Enter Doctor ID to update address: ";
+                cin.getline(doctorID, 15);
+
+                doctor doc;
+                doc.updateDoctorAddress(doctorID);
+                break;
+            }
+            case 5: // Update appointment date
+            {
+                char appointmentID[15];
+                cout << "Enter Appointment ID to update date: ";
+                cin.getline(appointmentID, 15);
+
+                appointment app;
+                app.updateAppointmentDate(appointmentID);
+                break;
+            }
+
+
+            case 6:
         {
             fstream file("appointment.txt", ios::out | ios::in | ios::binary);
             if (!file)
@@ -150,7 +183,7 @@ int main()
             file.close();
             break;
         }
-        case 6:
+        case 7:
         {
             fstream file("doctor.txt", ios::out | ios::in | ios::binary);
             if (!file)
@@ -188,7 +221,7 @@ int main()
             break;
         }
 
-        case 10:
+        case 11:
         {
             doctor d;
             char ID[15];
@@ -197,7 +230,7 @@ int main()
             d.searchDoctorById(ID, 1); */
             break;
         }
-        case 11:
+        case 12:
         {
             appointment a;
             char ID[15];
@@ -206,7 +239,9 @@ int main()
             a.searchAppointmentById(ID);
             break;
         }
-        default:
+
+
+            default:
             break;
         }
     }

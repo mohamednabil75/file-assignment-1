@@ -108,6 +108,167 @@ public:
             }
         }
     }
+
+    void updateDoctorName(const char* doctorID) {
+
+        vector<PIndex> primIndexArray;
+        readPrimIndex(primIndexArray, "Primary.txt");
+
+        int RRN = getRecordRRN(primIndexArray, doctorID);
+        if (RRN == -1) {
+            cout << "Doctor with ID '" << doctorID << "' not found!\n";
+            return;
+        }
+
+
+        fstream file("doctor.txt", ios::in | ios::out | ios::binary);
+        if (!file) {
+            cout << "Error opening doctor file for update!\n";
+            return;
+        }
+
+
+        file.seekg(RRN, ios::beg);
+        short length;
+        file.read((char*)&length, sizeof(short));
+
+        char *buffer = new char[length + 1];
+        file.read(buffer, length);
+        buffer[length] = '\0';
+
+        stringstream ss(buffer);
+        string currentId, currentName, currentAddress;
+        getline(ss, currentId, '|');
+        getline(ss, currentName, '|');
+        getline(ss, currentAddress, '|');
+
+        cout << "Current Doctor Information:\n";
+        cout << "ID: " << currentId << "\n";
+        cout << "Name: " << currentName << "\n";
+        cout << "Address: " << currentAddress << "\n\n";
+
+
+        char newName[30];
+        cout << "Enter new name (max 29 characters): ";
+        cin.getline(newName, 30);
+
+        if (strlen(newName) == 0) {
+            cout << "Name cannot be empty!\n";
+            delete[] buffer;
+            file.close();
+            return;
+        }
+        char updatedRecord[size];
+        strcpy(updatedRecord, doctorID);
+        strcat(updatedRecord, "|");
+        strcat(updatedRecord, newName);
+        strcat(updatedRecord, "|");
+        strcat(updatedRecord, currentAddress.c_str());
+        strcat(updatedRecord, "\n");
+
+        short newLength = strlen(updatedRecord);
+        if (newLength <= length) {
+
+            file.seekp(RRN + sizeof(short), ios::beg);
+            file.write(updatedRecord, newLength);
+
+            if (newLength < length) {
+                for (int i = newLength; i < length; i++) {
+                    file.put(' ');
+                }
+            }
+            cout << "Doctor name updated successfully!\n";
+        } else {
+            cout << "Error: New name is too long for the allocated space!\n";
+            cout << "Available space: " << length << " characters, Required: " << newLength << " characters\n";
+        }
+
+        delete[] buffer;
+        file.close();
+    }
+
+
+    void updateDoctorAddress(const char* doctorID) {
+
+        vector<PIndex> primIndexArray;
+        readPrimIndex(primIndexArray, "Primary.txt");
+
+        int RRN = getRecordRRN(primIndexArray, doctorID);
+        if (RRN == -1) {
+            cout << "Doctor with ID '" << doctorID << "' not found!\n";
+            return;
+        }
+
+        fstream file("doctor.txt", ios::in | ios::out | ios::binary);
+        if (!file) {
+            cout << "Error opening doctor file for update!\n";
+            return;
+        }
+
+        file.seekg(RRN, ios::beg);
+        short length;
+        file.read((char*)&length, sizeof(short));
+
+        char *buffer = new char[length + 1];
+        file.read(buffer, length);
+        buffer[length] = '\0';
+
+        stringstream ss(buffer);
+        string currentId, currentName, currentAddress;
+        getline(ss, currentId, '|');
+        getline(ss, currentName, '|');
+        getline(ss, currentAddress, '|');
+
+        cout << "Current Doctor Information:\n";
+        cout << "ID: " << currentId << "\n";
+        cout << "Name: " << currentName << "\n";
+        cout << "Address: " << currentAddress << "\n\n";
+
+
+        char newAddress[30];
+        cout << "Enter new address (max 29 characters): ";
+        cin.getline(newAddress, 30);
+
+        if (strlen(newAddress) == 0) {
+            cout << "Address cannot be empty!\n";
+            delete[] buffer;
+            file.close();
+            return;
+        }
+
+
+        char updatedRecord[size];
+        strcpy(updatedRecord, doctorID);
+        strcat(updatedRecord, "|");
+        strcat(updatedRecord, currentName.c_str());
+        strcat(updatedRecord, "|");
+        strcat(updatedRecord, newAddress);
+        strcat(updatedRecord, "\n");
+
+        short newLength = strlen(updatedRecord);
+
+
+        if (newLength <= length) {
+            file.seekp(RRN + sizeof(short), ios::beg);
+            file.write(updatedRecord, newLength);
+
+
+            if (newLength < length) {
+                for (int i = newLength; i < length; i++) {
+                    file.put(' ');
+                }
+            }
+            cout << "Doctor address updated successfully!\n";
+        } else {
+            cout << "Error: New address is too long for the allocated space!\n";
+            cout << "Available space: " << length << " characters, Required: " << newLength << " characters\n";
+        }
+
+        delete[] buffer;
+        file.close();
+    }
+
+
 };
 
 #endif
