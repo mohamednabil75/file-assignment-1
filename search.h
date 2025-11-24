@@ -32,7 +32,7 @@ class searchdoc:public virtual search{
      * @param ID for id u want to serch for
      * @param SearchAndOutput if true it output data of doctor if false it returns only RRN of doctor without output it
      */
-/*     int searchDoctorById(char ID[15],bool SearchAndOutput) {
+     int searchDoctorById(char ID[15],bool SearchAndOutput) {
         fstream primIndex("Primary.txt", ios::in | ios::binary);
         ifstream file("doctor.txt");
 
@@ -76,16 +76,16 @@ class searchdoc:public virtual search{
 
         file.close();
         primIndex.close();
-    } */
+    } 
 };
 class searchapp:public search{
     public:
     // Search appointment by ID
     void searchAppointmentById(char ID[15]) {
-        fstream primIndex("PrimaryAppointment.txt", ios::in | ios::binary);
+        // fstream primIndex("PrimaryAppointment.txt", ios::in | ios::binary);
         ifstream file("appointment.txt");
 
-        if (!file || !primIndex) {
+        if (!file) {
             cout << "Error: could not open files.\n";
             return;
         }
@@ -100,6 +100,7 @@ class searchapp:public search{
             cout << "Appointment not found!\n";
             return;
         }
+        cout<<"RRN is: "<<RRN<<endl;
 
         file.seekg(RRN, ios::beg);
         short length;
@@ -122,7 +123,8 @@ class searchapp:public search{
 
         delete[] buffer;
         file.close();
-        primIndex.close();
+        // primIndex.close();
     }
+
 };
 #endif

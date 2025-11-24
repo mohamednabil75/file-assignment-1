@@ -6,7 +6,7 @@ using namespace std;
 #include "search.h"
 // u can find class RAW in " ReadandWrite.h" file
 
-class doctor : public virtual RAW, public searchdoc
+class doctor : public virtual RAW, public virtual searchdoc
 {
 public:
     char id[15];
@@ -26,7 +26,10 @@ public:
         if (file.tellp() == 0) // To check if the file is empty
         {
             // Write the header
-            file << "Header: " << -1 << '\n';
+            int header=-1;
+            file.write((char*)&header, sizeof(int));
+            char ch='\n';
+            file.write(&ch,sizeof(char));
         }
         file.seekp(0, ios::end);
         int RRN = file.tellp();
@@ -64,24 +67,32 @@ public:
         cout << "Doctor added and Primary Index updated.\n";
     }
 
-
-    
     void deleteDoctor(fstream &file, doctor &d)
     {
-        file.seekg(8, ios::beg);
+        file.clear();
+        file.seekg(0, ios::beg);
         int firstdel;
-        file >> firstdel; // Get the Previous deleted record offset
+        file.read((char *)&firstdel, sizeof(int));// Get the Previous deleted record offset
 
         char checkdel;
         vector<PIndex> primIndexArray;
-        readPrimIndex(primIndexArray, "Primary.txt");
-        int rnn = getRecordRRN(primIndexArray, d.id);
+        readPrimIndex(primIndexArray,"Primary.txt");
+        int offset = getRecordRRN(primIndexArray, d.id);
+        short len;
+        file.seekg(offset, ios::beg);
+        file.read((char *)&len, sizeof(short));
+        len -= 6; // To skip the * and firstdel
+        file.seekp(0, ios::beg);
+        file.write((char *)&offset, sizeof(int));    // update header to new first deleted record
+        file.seekp(offset + sizeof(short), ios::beg); // move to the deletion marker
+        file.put('*');                                // mark as deleted
+        file.write((char *)&firstdel, sizeof(int));// point to previous deleted record
+        while (len)
+        {
+            file.put(' ');
+            len--;
+        }
 
-        file.seekp(8, ios::beg);
-        file << rnn;                               // update header to new first deleted record
-        file.seekp(rnn + sizeof(short), ios::beg); // move to the deletion marker
-        file.put('*');                             // mark as deleted
-        file << firstdel;                          // point to previous deleted record
         file.close();
 
         /*
@@ -109,28 +120,29 @@ public:
         }
     }
 
-    void updateDoctorName(const char* doctorID) {
+    void updateDoctorName(const char *doctorID)
+    {
 
         vector<PIndex> primIndexArray;
         readPrimIndex(primIndexArray, "Primary.txt");
 
         int RRN = getRecordRRN(primIndexArray, doctorID);
-        if (RRN == -1) {
+        if (RRN == -1)
+        {
             cout << "Doctor with ID '" << doctorID << "' not found!\n";
             return;
         }
 
-
         fstream file("doctor.txt", ios::in | ios::out | ios::binary);
-        if (!file) {
+        if (!file)
+        {
             cout << "Error opening doctor file for update!\n";
             return;
         }
 
-
         file.seekg(RRN, ios::beg);
         short length;
-        file.read((char*)&length, sizeof(short));
+        file.read((char *)&length, sizeof(short));
 
         char *buffer = new char[length + 1];
         file.read(buffer, length);
@@ -147,12 +159,12 @@ public:
         cout << "Name: " << currentName << "\n";
         cout << "Address: " << currentAddress << "\n\n";
 
-
         char newName[30];
         cout << "Enter new name (max 29 characters): ";
         cin.getline(newName, 30);
 
-        if (strlen(newName) == 0) {
+        if (strlen(newName) == 0)
+        {
             cout << "Name cannot be empty!\n";
             delete[] buffer;
             file.close();
@@ -167,18 +179,23 @@ public:
         strcat(updatedRecord, "\n");
 
         short newLength = strlen(updatedRecord);
-        if (newLength <= length) {
+        if (newLength <= length)
+        {
 
             file.seekp(RRN + sizeof(short), ios::beg);
             file.write(updatedRecord, newLength);
 
-            if (newLength < length) {
-                for (int i = newLength; i < length; i++) {
+            if (newLength < length)
+            {
+                for (int i = newLength; i < length; i++)
+                {
                     file.put(' ');
                 }
             }
             cout << "Doctor name updated successfully!\n";
-        } else {
+        }
+        else
+        {
             cout << "Error: New name is too long for the allocated space!\n";
             cout << "Available space: " << length << " characters, Required: " << newLength << " characters\n";
         }
@@ -187,27 +204,29 @@ public:
         file.close();
     }
 
-
-    void updateDoctorAddress(const char* doctorID) {
+    void updateDoctorAddress(const char *doctorID)
+    {
 
         vector<PIndex> primIndexArray;
         readPrimIndex(primIndexArray, "Primary.txt");
 
         int RRN = getRecordRRN(primIndexArray, doctorID);
-        if (RRN == -1) {
+        if (RRN == -1)
+        {
             cout << "Doctor with ID '" << doctorID << "' not found!\n";
             return;
         }
 
         fstream file("doctor.txt", ios::in | ios::out | ios::binary);
-        if (!file) {
+        if (!file)
+        {
             cout << "Error opening doctor file for update!\n";
             return;
         }
 
         file.seekg(RRN, ios::beg);
         short length;
-        file.read((char*)&length, sizeof(short));
+        file.read((char *)&length, sizeof(short));
 
         char *buffer = new char[length + 1];
         file.read(buffer, length);
@@ -224,18 +243,17 @@ public:
         cout << "Name: " << currentName << "\n";
         cout << "Address: " << currentAddress << "\n\n";
 
-
         char newAddress[30];
         cout << "Enter new address (max 29 characters): ";
         cin.getline(newAddress, 30);
 
-        if (strlen(newAddress) == 0) {
+        if (strlen(newAddress) == 0)
+        {
             cout << "Address cannot be empty!\n";
             delete[] buffer;
             file.close();
             return;
         }
-
 
         char updatedRecord[size];
         strcpy(updatedRecord, doctorID);
@@ -247,19 +265,22 @@ public:
 
         short newLength = strlen(updatedRecord);
 
-
-        if (newLength <= length) {
+        if (newLength <= length)
+        {
             file.seekp(RRN + sizeof(short), ios::beg);
             file.write(updatedRecord, newLength);
 
-
-            if (newLength < length) {
-                for (int i = newLength; i < length; i++) {
+            if (newLength < length)
+            {
+                for (int i = newLength; i < length; i++)
+                {
                     file.put(' ');
                 }
             }
             cout << "Doctor address updated successfully!\n";
-        } else {
+        }
+        else
+        {
             cout << "Error: New address is too long for the allocated space!\n";
             cout << "Available space: " << length << " characters, Required: " << newLength << " characters\n";
         }
@@ -267,8 +288,6 @@ public:
         delete[] buffer;
         file.close();
     }
-
-
 };
 
 #endif
