@@ -134,9 +134,8 @@ public:
         ifstream readFile(filename);
         if (!readFile)
             return;
-        readFile.seekg(8, ios::beg); // skip header
         int offset;
-        readFile >> offset;
+        readFile.read((char*)&offset, sizeof(int));
         while (offset != -1)
         {
             readFile.seekg(offset, ios::beg);
@@ -159,9 +158,9 @@ public:
         ifstream readFile(filename);
         if (!readFile)
             return;
-        readFile.seekg(8, ios::beg); // skip header
         int offset;
-        readFile >> offset;
+        readFile.read((char*)&offset, sizeof(int));
+        cout << offset << endl;
         while (offset != -1)
         {
             readFile.seekg(offset, ios::beg);
@@ -171,11 +170,11 @@ public:
             d.offset = offset;
             d.length = length;
             availarray.push_back(d);
-            readFile.seekg(offset + sizeof(short), ios::beg);
-            readFile.get(); // to skip '*'
-            readFile >> offset;
-            readFile.close();
+            readFile.seekg(offset + 3 , ios::beg);
+            readFile.read((char*)&offset, sizeof(int));
+
         }
+        readFile.close();
     }
 };
 #endif

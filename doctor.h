@@ -19,6 +19,8 @@ public:
      *@param d take data of doctor u want to add in primary index
      *add doctor data in file ("primary.txt")
      */
+
+    /*
     // Add appointment record + update primary index
     void addDoctorPI(fstream &file, doctor &d)
     {
@@ -28,23 +30,10 @@ public:
             // Write the header
             int header=-1;
             file.write((char*)&header, sizeof(int));
-            char ch='\n';
-            file.write(&ch,sizeof(char));
+           // char ch='\n';
+            //file.write(&ch,sizeof(char));
+            file.flush();
         }
-        file.seekp(0, ios::end);
-        int RRN = file.tellp();
-        char record[size];
-        strcpy(record, d.id);
-        strcat(record, "|");
-        strcat(record, d.name);
-        strcat(record, "|");
-        strcat(record, d.address);
-        strcat(record, "\n");
-
-        short length = strlen(record);
-        file.write((char *)&length, sizeof(short));
-        file.write(record, length);
-        // Update Primary Index
         vector<PIndex> primIndexArray;
         readPrimIndex(primIndexArray, "Primary.txt");
 
@@ -57,15 +46,173 @@ public:
             }
         }
 
+        char record[size];
+        strcpy(record, d.id);
+        strcat(record, "|");
+        strcat(record, d.name);
+        strcat(record, "|");
+        strcat(record, d.address);
+        strcat(record, "\n");
+
+        short length = strlen(record);
+        vector<DocAvail> avail;
+        readDocAvail(avail,"doctor.txt");
+        printDocAvail(avail);
+        int bestIndex = -1;
+        int bestSize = INT_MAX;
+        for (int i = 0 ; i < int(avail.size()); i++) {
+            if (avail[i].length >= length && avail[i].length < bestSize) {
+                bestSize = avail[i].length;
+                bestIndex = i;
+            }
+        }
+
+        int insertPos = -1;
+        if (bestIndex != -1) {
+            insertPos = avail[bestIndex].offset;
+
+            file.seekp(insertPos, ios::beg);
+            file.write((char *)&length, sizeof(short));
+            file.write(record, length);
+
+            avail.erase(avail.begin() + bestIndex);
+            //file.seekp(8, ios::beg);
+            int newHead = (avail.empty() ? -1 : avail[0].offset);
+            file.seekp(0, ios::beg);
+            file.write((char*)&newHead, sizeof(int));
+            for (int i = 0; i < (int)avail.size(); ++i)
+            {
+                int off = avail[i].offset;
+                int nextOff = (i + 1 < (int)avail.size()) ? avail[i + 1].offset : -1;
+
+                file.seekp(off + sizeof(short), ios::beg);
+                file.put('*');
+                file.write((char*)&nextOff, sizeof(int));
+            }
+        }
+        else {
+            // we just write at the end of the file
+            file.seekp(0, ios::end);
+            insertPos = file.tellp();
+
+            file.write((char *)&length, sizeof(short));
+            file.write(record, length);
+        }
         PIndex newEntry;
         strcpy(newEntry.id, d.id);
-        newEntry.RRN = RRN;
+        newEntry.RRN = insertPos;
         primIndexArray.push_back(newEntry);
         sort(primIndexArray.begin(), primIndexArray.end());
         writePrimIndex(primIndexArray, "Primary.txt");
 
         cout << "Doctor added and Primary Index updated.\n";
+    }*/
+     void addDoctorPI(fstream &file, doctor &d)
+{
+
+    file.seekp(0, ios::end);
+    if (file.tellp() == 0)
+    {
+        int header = -1;
+        file.write((char*)&header, sizeof(int));
+        //char ch='\n';
+        //file.write(&ch,sizeof(char));
+        file.flush();
     }
+
+
+    vector<PIndex> primIndexArray;
+    readPrimIndex(primIndexArray, "Primary.txt");
+
+    // check duplicate ID
+    for (auto &p : primIndexArray)
+    {
+        if (strcmp(p.id, d.id) == 0)
+        {
+            cout << "Doctor with this ID already exists\n";
+            return;
+        }
+    }
+
+
+    char record[size];
+    strcpy(record, d.id);
+    strcat(record, "|");
+    strcat(record, d.name);
+    strcat(record, "|");
+    strcat(record, d.address);
+    strcat(record, "\n");
+
+    short length = strlen(record);
+
+
+    vector<DocAvail> avail;
+    readDocAvail(avail, "doctor.txt");
+    sort(avail.begin(), avail.end());
+
+    int bestIndex = -1;
+    for (int i = 0; i < (int)avail.size(); i++)
+    {
+        if (avail[i].length >= length)
+        {
+            bestIndex = i;
+            break;
+        }
+    }
+
+    int insertPos = -1;
+
+         if (bestIndex != -1)
+         {
+             insertPos = avail[bestIndex].offset;
+
+             //  write record
+             file.seekp(insertPos, ios::beg);
+             file.write((char *)&length, sizeof(short));
+             file.write(record, length);
+
+             //  pad remaining space if needed
+             int waste = avail[bestIndex].length - length;
+             while (waste-- > 0)
+                 file.put(' ');
+
+             //  update header at beginning of file
+             avail.erase(avail.begin() + bestIndex);
+             int newHead = (avail.empty() ? -1 : avail[0].offset);
+
+             file.seekp(0, ios::beg);
+             file.write((char*)&newHead, sizeof(int));
+
+
+             for (int i = 0; i < avail.size(); i++)
+             {
+                 int off = avail[i].offset;
+                 int nextOff = (i + 1 < avail.size()) ? avail[i+1].offset : -1;
+
+                 file.seekp(off + sizeof(short), ios::beg);
+                 file.put('*');
+                 file.write((char*)&nextOff, sizeof(int));
+             }
+         }
+    else
+    {
+        // append at end
+        file.seekp(0, ios::end);
+        insertPos = file.tellp();
+
+        file.write((char*)&length, sizeof(short));
+        file.write(record, length);
+    }
+    PIndex newEntry;
+    strcpy(newEntry.id, d.id);
+    newEntry.RRN = insertPos;
+
+    primIndexArray.push_back(newEntry);
+    sort(primIndexArray.begin(), primIndexArray.end());
+    writePrimIndex(primIndexArray, "Primary.txt");
+
+    cout << "Doctor added and Primary Index updated.\n";
+}
 
     void deleteDoctor(fstream &file, doctor &d)
     {
@@ -184,7 +331,6 @@ public:
 
             file.seekp(RRN + sizeof(short), ios::beg);
             file.write(updatedRecord, newLength);
-
             if (newLength < length)
             {
                 for (int i = newLength; i < length; i++)
