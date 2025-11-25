@@ -160,9 +160,9 @@ public:
             return;
         int offset;
         readFile.read((char*)&offset, sizeof(int));
-        cout << offset << endl;
         while (offset != -1)
         {
+
             readFile.seekg(offset, ios::beg);
             short length;
             readFile.read((char *)&length, sizeof(short));

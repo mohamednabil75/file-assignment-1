@@ -35,7 +35,7 @@ int main()
         {
         case (1):
         {
-            fstream file("doctor.txt", ios::out | ios::app);
+            fstream file("doctor.txt", ios::out|ios::in );
             if (!file)
             {
                 cout << "Error opening file!\n";

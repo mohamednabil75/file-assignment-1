@@ -115,8 +115,8 @@ public:
     {
         int header = -1;
         file.write((char*)&header, sizeof(int));
-        //char ch='\n';
-        //file.write(&ch,sizeof(char));
+        char ch='\n';
+        file.write(&ch,sizeof(char));
         file.flush();
     }
 
@@ -170,6 +170,7 @@ public:
              file.seekp(insertPos, ios::beg);
              file.write((char *)&length, sizeof(short));
              file.write(record, length);
+             file.flush();
 
              //  pad remaining space if needed
              int waste = avail[bestIndex].length - length;
