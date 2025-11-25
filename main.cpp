@@ -8,7 +8,7 @@ int main()
 {
     // query q;
     // cout << endl;
-    // q.parse("select id,name,docid from doctor,appointment");
+    // q.parse("select id,name,docid from doctor,appointment.txt");
     // vector<string> name{"id","name","addres"};
     // cout<<q.checkCoulmn("doctor",name)<<endl;
     int choice;
@@ -35,7 +35,7 @@ int main()
         {
         case (1):
         {
-            fstream file("doctor.txt", ios::out|ios::in );
+            fstream file("doctor.txt", ios::out|ios::in);
             if (!file)
             {
                 cout << "Error opening file!\n";
@@ -74,7 +74,7 @@ int main()
 
         case 2:
         {
-            fstream file("appointment.txt", ios::out | ios::app | ios::binary);
+            fstream file("appointment.txt", ios::out | ios::in | ios::binary);
             if (!file)
             {
                 cout << "Error opening file!\n";
@@ -159,7 +159,7 @@ int main()
             bool validID = false;
             while (!validID)
             {
-                cout << "Enter appiontment ID: ";
+                cout << "Enter appointment ID: ";
                 cin.getline(app.id, 15);
 
                 vector<appointment::PIndex> tempIndex;

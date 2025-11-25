@@ -15,53 +15,112 @@ public:
     char docId[15];
     const static int size = 1000;
 
-    // Add appointment record + update primary index
+    // Add appointment.txt record + update primary index
     void addAppointmentPI(fstream &file, appointment &a)
+{
+    file.seekp(0, ios::end);
+    if (file.tellp() == 0)
     {
-        file.seekp(0, ios::end);
-        if (file.tellp() == 0)
+        int header = -1;
+        file.write((char*)&header, sizeof(int));
+        char ch = '\n';
+        file.write(&ch, sizeof(char));
+        file.flush();
+    }
+
+    char record[size];
+    strcpy(record, a.id);
+    strcat(record, "|");
+    strcat(record, a.date);
+    strcat(record, "|");
+    strcat(record, a.docId);
+    strcat(record, "\n");
+
+    short length = strlen(record);
+
+    vector<AppAvail> avail;
+    readAppAvail(avail, "appointment.txt");
+    sort(avail.begin(), avail.end());
+
+    int bestIndex = -1;
+
+    for (int i = 0; i < (int)avail.size(); i++)
+    {
+        if (avail[i].length >= length)
         {
-            int header = -1;
-            file.write((char *)&header, sizeof(int));
-            char ch = '\n';
-            file.write(&ch, sizeof(char));
+            bestIndex = i;
+            break;
         }
-        int RRN = file.tellp();
+    }
 
-        char record[size];
-        strcpy(record, a.id);
-        strcat(record, "|");
-        strcat(record, a.date);
-        strcat(record, "|");
-        strcat(record, a.docId);
-        strcat(record, "\n");
+    int insertPos = -1;
 
-        short length = strlen(record);
-        file.write((char *)&length, sizeof(short)); // binary length
+
+    if (bestIndex != -1)
+    {
+        insertPos = avail[bestIndex].offset;
+
+        file.seekp(insertPos, ios::beg);
+        file.write((char*)&length, sizeof(short));
         file.write(record, length);
 
-        // Update Primary Index
-        vector<PIndex> primIndexArray;
-        readPrimIndex(primIndexArray, "PrimaryAppointment.txt");
+        int waste = avail[bestIndex].length - length;
+        while (waste-- > 0)
+            file.put(' ');
 
-        for (auto &p : primIndexArray)
+        // update available list header
+        avail.erase(avail.begin() + bestIndex);
+        int newHead = (avail.empty() ? -1 : avail[0].offset);
+
+        file.seekp(0, ios::beg);
+        file.write((char*)&newHead, sizeof(int));
+
+        // rewrite linked list
+        for (int i = 0; i < avail.size(); i++)
         {
-            if (strcmp(p.id, a.id) == 0)
-            {
-                cout << "Appointment with this ID already exists\n";
-                return;
-            }
+            int off = avail[i].offset;
+            int nextOff = (i + 1 < avail.size()) ? avail[i + 1].offset : -1;
+
+            file.seekp(off + sizeof(short), ios::beg);
+            file.put('*');
+            file.write((char*)&nextOff, sizeof(int));
         }
-
-        PIndex newEntry;
-        strcpy(newEntry.id, a.id);
-        newEntry.RRN = RRN;
-        primIndexArray.push_back(newEntry);
-        sort(primIndexArray.begin(), primIndexArray.end());
-        writePrimIndex(primIndexArray, "PrimaryAppointment.txt");
-
-        cout << "Appointment added and Primary Index updated.\n";
     }
+    else
+    {
+        // append
+        file.seekp(0, ios::end);
+        insertPos = file.tellp();
+
+        file.write((char*)&length, sizeof(short));
+        file.write(record, length);
+    }
+
+    // Update Primary Index
+    vector<PIndex> primIndexArray;
+    readPrimIndex(primIndexArray, "PrimaryAppointment.txt");
+
+    // check duplicate
+    for (auto &p : primIndexArray)
+    {
+        if (strcmp(p.id, a.id) == 0)
+        {
+            cout << "Appointment with this ID already exists\n";
+            return;
+        }
+    }
+
+    PIndex newEntry;
+    strcpy(newEntry.id, a.id);
+    newEntry.RRN = insertPos;
+
+    primIndexArray.push_back(newEntry);
+    sort(primIndexArray.begin(), primIndexArray.end());
+    writePrimIndex(primIndexArray, "PrimaryAppointment.txt");
+
+    cout << "Appointment added and Primary Index updated.\n";
+}
+
 
     void deleteAppointmentPI(fstream &file, appointment &a)
     {

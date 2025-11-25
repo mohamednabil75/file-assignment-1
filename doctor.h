@@ -21,7 +21,7 @@ public:
      */
 
     /*
-    // Add appointment record + update primary index
+    // Add appointment.txt record + update primary index
     void addDoctorPI(fstream &file, doctor &d)
     {
         file.seekp(0, ios::end);
@@ -107,6 +107,8 @@ public:
 
         cout << "Doctor added and Primary Index updated.\n";
     }*/
+
+
      void addDoctorPI(fstream &file, doctor &d)
 {
 

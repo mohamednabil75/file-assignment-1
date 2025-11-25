@@ -145,11 +145,10 @@ public:
             a.offset = offset;
             a.length = length;
             availarray.push_back(a);
-            readFile.seekg(offset + sizeof(short), ios::beg);
-            readFile.get(); // to skip '*'
-            readFile >> offset;
-            readFile.close();
+            readFile.seekg(offset + 3, ios::beg);
+            readFile.read((char*)&offset, sizeof(int));
         }
+        readFile.close();
     }
 
     // Read available records for insertion in Doctor file
