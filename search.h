@@ -3,13 +3,16 @@
 #include <bits/stdc++.h>
 #include "ReadandWrite.h"
 using namespace std;
- // u can find class RAW in " ReadandWrite.h" file
+// u can find class RAW in " ReadandWrite.h" file
 
-class search:public virtual RAW{
-    public:    
-        int getRecordRRN(vector<PIndex> &primIndexArray, const char *id) {
+class search : public virtual RAW
+{
+public:
+    int getRecordRRN(vector<PIndex> &primIndexArray, const char *id)
+    {
         int low = 0, high = primIndexArray.size() - 1;
-        while (low <= high) {
+        while (low <= high)
+        {
             int mid = (low + high) / 2;
             int cmp = strcmp(id, primIndexArray[mid].id);
             if (cmp < 0)
@@ -21,40 +24,42 @@ class search:public virtual RAW{
         }
         return -1;
     }
-
-
 };
-class searchdoc:public virtual search{
-    public:
-    
+class searchdoc : public virtual search
+{
+public:
     // Binary search in primary index
     /**
      * @param ID for id u want to serch for
      * @param SearchAndOutput if true it output data of doctor if false it returns only RRN of doctor without output it
      */
-     int searchDoctorById(char ID[15],bool SearchAndOutput) {
+    int searchDoctorById(char ID[15], bool SearchAndOutput)
+    {
         fstream primIndex("Primary.txt", ios::in | ios::binary);
         ifstream file("doctor.txt");
 
-        if (!file || !primIndex) {
+        if (!file || !primIndex)
+        {
             cout << "Error: could not open files.\n";
             return -1;
         }
 
         vector<PIndex> PrimIndexArray;
-        readPrimIndex(PrimIndexArray,"primary.txt");
+        readPrimIndex(PrimIndexArray, "primary.txt");
         int RRN = getRecordRRN(PrimIndexArray, ID);
-        if (RRN == -1) {
+        if (RRN == -1)
+        {
             cout << "Doctor not found!\n";
             return -1;
         }
-        else if (SearchAndOutput==0){
+        else if (SearchAndOutput == 0)
+        {
             return RRN;
         }
 
         file.seekg(RRN, ios::beg);
         short length;
-        file.read((char*)&length, sizeof(short));
+        file.read((char *)&length, sizeof(short));
 
         char *buffer = new char[length + 1];
         file.read(buffer, length);
@@ -73,38 +78,119 @@ class searchdoc:public virtual search{
 
         delete[] buffer;
 
-
         file.close();
         primIndex.close();
-    } 
+    }
+    void searchByDoctorName(string doctorName,
+                            string secIndexFile = "Doctors_Secondary.txt",
+                            string secListFile = "Doctors_Secondary_List.txt",
+                            string primaryFile = "Primary.txt",
+                            string dataFile = "doctor.txt")
+    {
+        vector<DocSecIndex> secIndex;
+        vector<DocSecNode> nodes;
+        readDocSecondaryIndex(secIndex, secIndexFile);
+        readDocSecondaryList(nodes, secListFile);
+
+        int pos = binarySearchDocName(secIndex, doctorName);
+        if (pos == -1)
+        {
+            cout << "No doctors found with name: " << doctorName << "\n";
+            return;
+        }
+
+        int head = secIndex[pos].head;
+        if (head == -1)
+        {
+            cout << "No doctors linked to this name.\n";
+            return;
+        }
+
+        vector<PIndex> primary;
+        readPrimIndex(primary, primaryFile);
+
+        int cur = head;
+
+        while (cur != -1)
+        {
+            string docID = nodes[cur].doctorID;
+
+            int rrn = -1;
+            for (auto &p : primary)
+            {
+                if (docID == p.id)
+                {
+                    rrn = p.RRN;
+                    break;
+                }
+            }
+
+            if (rrn == -1)
+            {
+                cout << "Error: DoctorID found in secondary but not in primary.\n";
+                cur = nodes[cur].next;
+                continue;
+            }
+
+            ifstream in(dataFile);
+            if (!in)
+            {
+                cout << "Cannot open Doctors file.\n";
+                return;
+            }
+
+            in.seekg(rrn, ios::beg);
+
+            short len = 0;
+            in.read((char *)&len, sizeof(short));
+
+            if (len <= 0)
+            {
+                cout << "Deleted or empty record.\n";
+                cur = nodes[cur].next;
+                continue;
+            }
+
+            string record(len, ' ');
+            in.read(&record[0], len);
+
+            cout << "Doctor Record: " << record << "\n";
+
+            in.close();
+
+            cur = nodes[cur].next;
+        }
+    }
 };
-class searchapp:public search{
-    public:
+class searchapp : public search
+{
+public:
     // Search appointment by ID
-    void searchAppointmentById(char ID[15]) {
+    void searchAppointmentById(char ID[15])
+    {
         // fstream primIndex("PrimaryAppointment.txt", ios::in | ios::binary);
         ifstream file("appointment.txt");
 
-        if (!file) {
+        if (!file)
+        {
             cout << "Error: could not open files.\n";
             return;
         }
 
         vector<PIndex> primIndexArray;
-        readPrimIndex(primIndexArray,"PrimaryAppointment.txt");
-
-       
+        readPrimIndex(primIndexArray, "PrimaryAppointment.txt");
 
         int RRN = getRecordRRN(primIndexArray, ID);
-        if (RRN == -1) {
+        if (RRN == -1)
+        {
             cout << "Appointment not found!\n";
             return;
         }
-        cout<<"RRN is: "<<RRN<<endl;
+        cout << "RRN is: " << RRN << endl;
 
         file.seekg(RRN, ios::beg);
         short length;
-        file.read((char*)&length, sizeof(short));
+        file.read((char *)&length, sizeof(short));
 
         char *buffer = new char[length + 1];
         file.read(buffer, length);
@@ -125,6 +211,90 @@ class searchapp:public search{
         file.close();
         // primIndex.close();
     }
+    void searchByDoctorID(string doctorID,
+                          string secIndexFile = "Appointments_Secondary.txt",
+                          string secListFile = "Appointments_Secondary_List.txt",
+                          string primaryFile = "PrimaryAppointment.txt",
+                          string dataFile = "appointment.txt")
+    {
+        vector<AppSecIndex> secIndex;
+        vector<AppSecNode> nodes;
 
+        readAppSecondaryIndex(secIndex, secIndexFile);
+        readAppSecondaryList(nodes, secListFile);
+
+        int pos = binarySearchAppDoctorID(secIndex, doctorID);
+
+        if (pos == -1)
+        {
+            cout << "No appointments found for DoctorID = " << doctorID << "\n";
+            return;
+        }
+
+        int head = secIndex[pos].head;
+
+        if (head == -1)
+        {
+            cout << "No appointments linked to this doctor.\n";
+            return;
+        }
+
+        vector<PIndex> primary;
+        readPrimIndex(primary, primaryFile);
+
+        int cur = head;
+
+        while (cur != -1)
+        {
+            string appID = nodes[cur].appointmentID;
+
+            int rrn = -1;
+            for (auto &p : primary)
+            {
+                if (appID == p.id)
+                {
+                    rrn = p.RRN;
+                    break;
+                }
+            }
+
+            if (rrn == -1)
+            {
+                cout << "Error: AppointmentID found in secondary but missing in primary.\n";
+                cur = nodes[cur].next;
+                continue;
+            }
+
+            // 5. Read the actual appointment record using RRN
+            ifstream in(dataFile);
+            if (!in)
+            {
+                cout << "Cannot open Appointments file.\n";
+                return;
+            }
+
+            in.seekg(rrn, ios::beg);
+
+            short len = 0;
+            in.read((char *)&len, sizeof(short));
+
+            if (len <= 0)
+            {
+                cout << "Deleted or empty record.\n";
+                in.close();
+                cur = nodes[cur].next;
+                continue;
+            }
+
+            string record(len, ' ');
+            in.read(&record[0], len);
+
+            cout << "Appointment Record: " << record << "\n";
+
+            in.close();
+
+            cur = nodes[cur].next;
+        }
+    }
 };
 #endif

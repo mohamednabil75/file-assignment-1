@@ -35,6 +35,28 @@ public:
             return length < a.length;
         }
     };
+    struct DocSecIndex
+    {
+        char doctorName[30];
+        int head;
+    };
+
+    struct DocSecNode
+    {
+        char doctorID[15];
+        int next;
+    };
+    struct AppSecIndex
+    {
+        char doctorID[15]; // Secondary key
+        int head;          // pointer to linked list head
+    };
+
+    struct AppSecNode
+    {
+        char appointmentID[15];
+        int next;
+    };
 
     /**
      *@param primIndexArray have sorted data of file"primary.txt"
@@ -135,7 +157,7 @@ public:
         if (!readFile)
             return;
         int offset;
-        readFile.read((char*)&offset, sizeof(int));
+        readFile.read((char *)&offset, sizeof(int));
         while (offset != -1)
         {
             readFile.seekg(offset, ios::beg);
@@ -146,7 +168,7 @@ public:
             a.length = length;
             availarray.push_back(a);
             readFile.seekg(offset + 3, ios::beg);
-            readFile.read((char*)&offset, sizeof(int));
+            readFile.read((char *)&offset, sizeof(int));
         }
         readFile.close();
     }
@@ -158,7 +180,7 @@ public:
         if (!readFile)
             return;
         int offset;
-        readFile.read((char*)&offset, sizeof(int));
+        readFile.read((char *)&offset, sizeof(int));
         while (offset != -1)
         {
 
@@ -169,11 +191,324 @@ public:
             d.offset = offset;
             d.length = length;
             availarray.push_back(d);
-            readFile.seekg(offset + 3 , ios::beg);
-            readFile.read((char*)&offset, sizeof(int));
-
+            readFile.seekg(offset + 3, ios::beg);
+            readFile.read((char *)&offset, sizeof(int));
         }
         readFile.close();
+    }
+    void writeDocSecondaryIndex(vector<DocSecIndex> &secIndex, string filename)
+    {
+        ofstream out(filename);
+        for (auto &entry : secIndex)
+        {
+            out << entry.doctorName << "|" << entry.head << "\n";
+        }
+        out.close();
+    }
+    void readDocSecondaryIndex(vector<DocSecIndex> &secIndex, string filename)
+    {
+        ifstream in(filename);
+        if (!in)
+            return;
+
+        string line;
+        while (getline(in, line))
+        {
+            stringstream ss(line);
+            string name, headStr;
+
+            getline(ss, name, '|');
+            getline(ss, headStr, '|');
+
+            DocSecIndex e;
+            strcpy(e.doctorName, name.c_str());
+            e.head = stoi(headStr);
+
+            secIndex.push_back(e);
+        }
+        in.close();
+    }
+    void writeDocSecondaryList(vector<DocSecNode> &nodes, string filename)
+    {
+        ofstream out(filename);
+        for (auto &n : nodes)
+        {
+            out << n.doctorID << "|" << n.next << "\n";
+        }
+        out.close();
+    }
+    void readDocSecondaryList(vector<DocSecNode> &nodes, string filename)
+    {
+        ifstream in(filename);
+        if (!in)
+            return;
+
+        string line;
+        while (getline(in, line))
+        {
+            stringstream ss(line);
+            string idStr, nextStr;
+
+            getline(ss, idStr, '|');
+            getline(ss, nextStr, '|');
+
+            DocSecNode node;
+            strcpy(node.doctorID, idStr.c_str());
+            node.next = stoi(nextStr);
+
+            nodes.push_back(node);
+        }
+        in.close();
+    }
+    int binarySearchDocName(const vector<DocSecIndex> &secIndex, const string &name)
+    {
+        int l = 0, r = secIndex.size() - 1;
+        while (l <= r)
+        {
+            int mid = (l + r) / 2;
+            int cmp = strcmp(secIndex[mid].doctorName, name.c_str());
+
+            if (cmp == 0)
+                return mid;
+
+            if (cmp < 0)
+                l = mid + 1;
+            else
+                r = mid - 1;
+        }
+        return -1;
+    }
+    void insertIntoDocSecondary(string doctorName, string doctorID,
+                                string secIndexFile = "Doctors_Secondary.txt",
+                                string secListFile = "Doctors_Secondary_List.txt")
+    {
+        vector<DocSecIndex> secIndex;
+        vector<DocSecNode> nodes;
+
+        readDocSecondaryIndex(secIndex, secIndexFile);
+        readDocSecondaryList(nodes, secListFile);
+        /* sort(secIndex.begin(), secIndex.end(),
+             [](const DocSecIndex &a, const DocSecIndex &b)
+             {
+                 return strcmp(a.doctorName, b.doctorName) < 0;
+             }); */
+
+        int pos = binarySearchDocName(secIndex, doctorName);
+
+        DocSecNode newNode;
+        strcpy(newNode.doctorID, doctorID.c_str());
+        newNode.next = -1;
+
+        int newNodeIndex = nodes.size();
+
+        nodes.push_back(newNode);
+
+        if (pos == -1)
+        {
+            cout << "=====================================\n";
+            DocSecIndex entry;
+            strcpy(entry.doctorName, doctorName.c_str());
+            entry.head = newNodeIndex;
+
+            secIndex.push_back(entry);
+
+            sort(secIndex.begin(), secIndex.end(),
+                 [](const DocSecIndex &a, const DocSecIndex &b)
+                 {
+                     return strcmp(a.doctorName, b.doctorName) < 0;
+                 });
+
+            writeDocSecondaryIndex(secIndex, secIndexFile);
+            writeDocSecondaryList(nodes, secListFile);
+            return;
+        }
+        newNode.next = secIndex[pos].head;
+        nodes[newNodeIndex] = newNode;
+        secIndex[pos].head = newNodeIndex;
+        writeDocSecondaryIndex(secIndex, secIndexFile);
+        writeDocSecondaryList(nodes, secListFile);
+    }
+    void updateDocSecondary(string oldName, string newName, string doctorID,
+                            string secIndexFile = "Doctors_Secondary.txt",
+                            string secListFile = "Doctors_Secondary_List.txt")
+    {
+        vector<DocSecIndex> secIndex;
+        vector<DocSecNode> nodes;
+        readDocSecondaryIndex(secIndex, secIndexFile);
+        readDocSecondaryList(nodes, secListFile);
+        int pos = binarySearchDocName(secIndex, oldName);
+        if (pos == -1)
+        {
+            cout << "Old Name not found in secondary index.\n";
+            return;
+        }
+
+        int head = secIndex[pos].head;
+        int prev = -1;
+        int cur = head;
+
+        while (cur != -1)
+        {
+            if (strcmp(nodes[cur].doctorID, doctorID.c_str()) == 0)
+            {
+                if (prev == -1)
+                {
+                    secIndex[pos].head = nodes[cur].next;
+                }
+                else
+                {
+                    nodes[prev].next = nodes[cur].next;
+                }
+                break;
+            }
+
+            prev = cur;
+            cur = nodes[cur].next;
+        }
+
+        if (secIndex[pos].head == -1)
+        {
+            secIndex.erase(secIndex.begin() + pos);
+        }
+
+        writeDocSecondaryIndex(secIndex, secIndexFile);
+        writeDocSecondaryList(nodes, secListFile);
+
+        insertIntoDocSecondary(newName, doctorID, secIndexFile, secListFile);
+
+        // cout << "Doctor name updated in secondary index.\n";
+    }
+    void readAppSecondaryIndex(vector<AppSecIndex> &secIndex,
+                               string filename = "Appointments_Secondary.txt")
+    {
+        ifstream in(filename);
+        if (!in)
+            return;
+
+        string line;
+        while (getline(in, line))
+        {
+            stringstream ss(line);
+            string docID, headStr;
+
+            getline(ss, docID, '|');
+            getline(ss, headStr, '|');
+
+            AppSecIndex e;
+            strcpy(e.doctorID, docID.c_str());
+            e.head = stoi(headStr);
+
+            secIndex.push_back(e);
+        }
+        in.close();
+    }
+    void writeAppSecondaryIndex(vector<AppSecIndex> &secIndex, string filename = "Appointments_Secondary.txt")
+    {
+        ofstream out(filename);
+
+        for (auto &e : secIndex)
+        {
+            out << e.doctorID << "|" << e.head << "\n";
+        }
+
+        out.close();
+    }
+    void readAppSecondaryList(vector<AppSecNode> &nodes, string filename = "Appointments_Secondary_List.txt")
+    {
+        ifstream in(filename);
+        if (!in)
+            return;
+
+        string line;
+        while (getline(in, line))
+        {
+            stringstream ss(line);
+            string appID, nextStr;
+
+            getline(ss, appID, '|');
+            getline(ss, nextStr, '|');
+
+            AppSecNode node;
+            strcpy(node.appointmentID, appID.c_str());
+            node.next = stoi(nextStr);
+
+            nodes.push_back(node);
+        }
+        in.close();
+    }
+    void writeAppSecondaryList(vector<AppSecNode> &nodes, string filename = "Appointments_Secondary_List.txt")
+    {
+        ofstream out(filename);
+
+        for (auto &n : nodes)
+        {
+            out << n.appointmentID << "|" << n.next << "\n";
+        }
+
+        out.close();
+    }
+    int binarySearchAppDoctorID(const vector<AppSecIndex> &secIndex, const string &doctorID)
+    {
+        int l = 0, r = secIndex.size() - 1;
+
+        while (l <= r)
+        {
+            int mid = (l + r) / 2;
+            int cmp = strcmp(secIndex[mid].doctorID, doctorID.c_str());
+
+            if (cmp == 0)
+                return mid;
+            if (cmp < 0)
+                l = mid + 1;
+            else
+                r = mid - 1;
+        }
+        return -1;
+    }
+    void insertIntoAppSecondary(string doctorID, string appointmentID,
+                                string indexFile = "Appointments_Secondary.txt",
+                                string listFile = "Appointments_Secondary_List.txt")
+    {
+        vector<AppSecIndex> secIndex;
+        vector<AppSecNode> nodes;
+
+        readAppSecondaryIndex(secIndex, indexFile);
+        readAppSecondaryList(nodes, listFile);
+
+        int pos = binarySearchAppDoctorID(secIndex, doctorID);
+
+        AppSecNode newNode;
+        strcpy(newNode.appointmentID, appointmentID.c_str());
+        newNode.next = -1;
+
+        int newNodeIndex = nodes.size();
+        nodes.push_back(newNode);
+
+        if (pos == -1)
+        {
+            AppSecIndex entry;
+            strcpy(entry.doctorID, doctorID.c_str());
+            entry.head = newNodeIndex;
+
+            secIndex.push_back(entry);
+
+            sort(secIndex.begin(), secIndex.end(),
+                 [](const AppSecIndex &a, const AppSecIndex &b)
+                 {
+                     return strcmp(a.doctorID, b.doctorID) < 0;
+                 });
+
+            writeAppSecondaryIndex(secIndex, indexFile);
+            writeAppSecondaryList(nodes, listFile);
+            return;
+        }
+
+        newNode.next = secIndex[pos].head;
+        nodes[newNodeIndex] = newNode;
+        secIndex[pos].head = newNodeIndex;
+
+        writeAppSecondaryIndex(secIndex, indexFile);
+        writeAppSecondaryList(nodes, listFile);
     }
 };
 #endif

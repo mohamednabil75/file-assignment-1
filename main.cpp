@@ -35,7 +35,7 @@ int main()
         {
         case (1):
         {
-            fstream file("doctor.txt", ios::out|ios::in);
+            fstream file("doctor.txt", ios::out | ios::in);
             if (!file)
             {
                 cout << "Error opening file!\n";
@@ -219,14 +219,13 @@ int main()
             file.close();
             break;
         }
-
-        case 11:
+        case 9:
         {
             doctor d;
             char ID[15];
             cout << "Enter Target Doctor ID: ";
             cin >> ID;
-            d.searchDoctorById(ID,1);
+            d.searchDoctorById(ID, 1);
             break;
         }
         case 12:
