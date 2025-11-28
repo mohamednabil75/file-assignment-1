@@ -6,11 +6,6 @@
 using namespace std;
 int main()
 {
-    // query q;
-    // cout << endl;
-    // q.parse("select id,name,docid from doctor,appointment.txt");
-    // vector<string> name{"id","name","addres"};
-    // cout<<q.checkCoulmn("doctor",name)<<endl;
     int choice;
     while (true)
     {
@@ -24,11 +19,9 @@ int main()
              << "8) Print doctor info\n"
              << "9) Print appointment info\n"
              << "10) Write query\n"
-             << "11) Search for specific doctor\n"
-             << "12) Search for specific appointment\n"
              << "0) Exit\n";
         cin >> choice;
-        cin.ignore();
+        cin.ignore(1000,'\n');
         if (choice == 0)
             break;
         switch (choice)
@@ -38,8 +31,9 @@ int main()
             fstream file("doctor.txt", ios::out | ios::in);
             if (!file)
             {
-                cout << "Error opening file!\n";
-                return 1;
+                 ofstream create("doctor.txt");
+                 create.close();
+                 file.open ("doctor.txt", ios::out | ios::in);
             }
             doctor doc;
             bool validID = false;
@@ -77,8 +71,9 @@ int main()
             fstream file("appointment.txt", ios::out | ios::in | ios::binary);
             if (!file)
             {
-                cout << "Error opening file!\n";
-                return 1;
+                ofstream create("appointment.txt");
+                create.close();
+                file.open ("appointment.txt", ios::out | ios::binary|ios::in);
             }
 
             appointment appoint;
@@ -109,9 +104,11 @@ int main()
             cout << "Doctor ID: ";
             cin.getline(appoint.docId, 15);
             doctor d;
-            // int docfound = d.searchDoctorById(appoint.docId, 0);
-            // if (docfound == -1)
-            // continue;
+            int docfound = d.searchDoctorById(appoint.docId, 0);
+            if (docfound == -1) {
+                cout<<"there is no doctor with this id"<<endl;
+                continue;
+            }
             appoint.addAppointmentPI(file, appoint);
             file.close();
             break;
@@ -219,7 +216,7 @@ int main()
             file.close();
             break;
         }
-        case 9:
+        case 8:
         {
             doctor d;
             char ID[15];
@@ -228,13 +225,20 @@ int main()
             d.searchDoctorById(ID, 1);
             break;
         }
-        case 12:
-        {
-            appointment a;
+        case 9: {
+            appointment app;
             char ID[15];
-            cout << "Enter Target Appointment ID: ";
+            cout << "Enter Target Doctor ID: ";
             cin >> ID;
-            a.searchAppointmentById(ID);
+            app.searchAppointmentById(ID,1);
+            break;
+        }
+        case 10: {
+            query q;
+            string query;
+            getline(cin, query);
+            q.parse(query);
+
             break;
         }
 
